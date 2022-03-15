@@ -1,0 +1,61 @@
+#Plot a box plot of the data with error bars
+library(ggpubr)
+library(tidyverse)
+library(ggplot2)
+library(dunn.test)
+library(vtable)
+
+#Read in data
+df<-read.csv("data.csv")
+summary(df)
+
+#Remove any excess columns from data frame (this example removes columns 3-6) - if needed
+test[,3:6]<-NULL
+
+#rename columns (if needed)
+names(name)[2]<-"new_name"
+
+#Check data frame is correct
+summary(df)
+
+#Change independent variable to a factor (it read in as a character)
+df$independant_variable<-as.factor(df$independant_variable)
+
+#Changedependant_variable to charachters
+df$dependant_variable<- as.character(df$dependant_variable) 
+
+#Plot the data with y as the dependent variable and x as the independent variable
+plot(df$y~df$x)
+
+#ANOVA of data to have an initial look
+anvova_df<-aov(df$y~df$x)
+
+#Look for residuals ACROSS the data set using pearson correlation
+sr_df<-resid(anvova_df, type = "pearson")
+
+#Plot to look for normality in the data
+#Normality is if the data sits on or close to the line
+#If data is not normal, try transforming before continuing with non normal data comparisons/stats
+qqnorm(sr_df); qqline(sr_df)
+
+#Dunn test if data is not normal
+dt_df<-dunn.test(df$y, df$x, method="BH")
+dt_df
+
+#Box plot
+plot<-ggplot(df, aes(x=x, y=y))+
+  geom_boxplot(position=position_dodge(1))+
+  labs(x="x", y="y")+theme_classic()+
+  theme(axis.text.x = element_text(angle=90, hjust=1))+ylim(0.04, 0.09)+
+  stat_summary(fun = mean, geom="point", size=1, colour="red")+
+  stat_summary(fun.data = mean_sd, geom="errorbar", width=0.5)+
+  stat_compare_means(aes(label=..p.adj..), method = "wilcox.test", label = "p.signif", ref.group = "group")
+
+#Save plot as svg
+ggsave(file="plot.svg", plot=plot, width = 10, height = 8)
+
+#Write sumtable file
+st(df, file="stats_table.csv", group="group", group.long = TRUE)
+
+#Checking significance (in Excel)
+=IF(E2<=0.0001,"****",IF(E2<=0.001,"***",IF(E2<=0.01,"**",IF(E2<=0.05,"*",IF(E2>0.05,"ns")))))
