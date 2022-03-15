@@ -1,0 +1,36 @@
+library(ggplot2)
+library(dplyr)
+library(ggpubr)
+
+tutorial: https://rforbiochemists.blogspot.com/2020/04/analysing-elisa-standard-curve.html
+
+#Load in data (df is the standard curve and unknowns are the concentrations you want to find based on OD)
+df<-read.csv(file.choose())
+unknowns<-read.csv(file.choose())
+
+#Check standard curve as a test before use
+plot(data=df, y~x)
+
+#Create plot of standard curve (unfiltered)
+ggplot(df, aes(x=x, y=y))+
+  geom_point()+
+  geom_smooth()
+
+#Filter the standard curve based on the first few points (more accurate)
+df %>%
+  filter(x<25) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_point() +
+  stat_smooth(method = "lm", formula = y~x)
+
+#Create a filtered standard curve
+df_filtered<-filter(df, x<25)
+#Create a line using the linear model of the filtered standard curve
+line<-lm(df_filtered$y~df_filtered$x)
+
+#Find the intercept and slope of the standard curve
+intercept<-line$coefficients[1]
+slope<-line$coefficients[2]
+
+#List the unknown concentrations using y=mc^2 equations
+unknown_concs<-c(slope*unknowns[2]+intercept)
