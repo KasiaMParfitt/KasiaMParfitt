@@ -1,0 +1,16 @@
+rvinstall.packages("devtools")
+library(ggplot2)
+
+#Load Data Frame
+df<-read.csv("data.csv")
+
+#Basic Scatter Plot of Growth Curve
+plot<-ggplot(df, aes(x=dependant_variable, y=independant_variable, group=group_name))+
+  geom_point(aes(color=group_name))+
+  theme_classic()+
+  xlab("x_label")+ylab("y_label")+
+  ylim(0.0,0.5)+
+  theme(legend.position = "bottom")
+
+#Save image as file
+ggsave(file="plot.svg", plot=plot, width = 10, height = 8)
