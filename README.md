@@ -1,0 +1,4 @@
+- 👋 Hi, I’m Kasia Parfitt
+- 👀 I’m interested in anything microbial
+- 🌱 I’m currently learning about _Burkholderia multivorans_ (PhD Student)__
+- 📫 Reach me on parfittkm@cardiff.ac.uk
