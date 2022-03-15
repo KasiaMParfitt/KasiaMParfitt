@@ -1,0 +1,21 @@
+library(ggplot2)
+library(ggtree)
+
+#Load in phylogenomic tree
+tree_file<-read.tree(file.choose())
+
+#Load in data frame (as csv file)
+df<-read.csv(file.choose())
+
+#create ggtree
+ggtree_tree<-ggtree(tree_file)
+
+#CREATE TREE AND HEATMAP COMBINED
+gheatmap(ggtree_tree, df,
+         low="light blue", high="navy", colnames=TRUE,
+         colnames_position = "top", colnames_offset_y = 2,
+         colnames_angle = 90, font.size = 2.5, offset=0.025)+
+  geom_tiplab(align = TRUE, linetype = 0, size=3, offset = 0.01)+
+  theme(plot.margin = margin(30,40))+
+  scale_y_continuous(expand = expansion(mult = c(0, .05)))+theme(legend.position = "none")
+
