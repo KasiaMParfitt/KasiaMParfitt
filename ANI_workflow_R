@@ -1,0 +1,79 @@
+#Load in the libraries
+library(ggpubr)
+library(tidyverse)
+library(ggplot2)
+library(VGAM)
+library(dunn.test)
+library(rcompanion)
+library(summarytools)
+
+#Set Working directory
+setwd("c:/path/to/directory")
+
+#Load in data (CSV file)
+df<-read.csv(file.choose())
+
+#Summarise the data (checking before use)
+summary(df)
+
+#Basic plot to show x as the dependant variable and y as the independant (checking of data)
+plot(df$y~df$x)
+
+#ANOVA of data to have an initial look
+anvova_df<-aov(df$y~df$x)
+
+#Look for residuals ACROSS the data set using pearson correlation
+sr_df<-resid(anvova_df, type = "pearson")
+
+#Plot to look for normality in the data
+#Normality is if the data sits on or close to the line
+#If data is not normal, try transforming before continuing with non normal data comparisons/stats
+qqnorm(sr_df); qqline(sr_df)
+
+#Change independent variable to numeric (needed for wilcox test to work)
+df$independant_variable<-as.numeric(df$independant_variable)
+
+#Wilcox test for non-parametric comparison (two comparisons)
+wilcox.test(df$x, df$y)
+
+#Dunn test if data is not normal (for multiple comparisons)
+dt_df<-dunn.test(df$y, df$x, method="BH")
+
+#Check results of dunn.test
+dt_df
+
+#Create function to find basic statistics of the data (for use multiple times)
+basic_stats<-function(x){
+  c(mean=mean(x), median=median(x))
+}
+
+#Get data from function
+basic_stats(df$y)
+
+#Find box plot stats for each group using tapply (summary option will provide the stats)
+tapply(df$y, df$x, summary)
+
+#Change independent variable to factor (needed for figures to work)
+df$independant_variable<-as.factor(df$independant_variable)
+
+#Basic violin plot to check data
+ggplot(df, aes(x=x_variable, y=y_variable))+
+  geom_violin()
+
+#List of comparisons (example for two comparisons)
+comparisons<-list(c("comparison_1","comparison_2"))
+
+#Violin plot with means and box plot
+plot<-ggplot(df, aes(x=x_variable, y=y_variable))+
+  geom_violin()+
+  labs(y="y_label", x="x_label")+
+  stat_summary(fun = mean, geom="point", shape=16, color="red")+
+  geom_boxplot(width=0.1)+
+  theme_classic()+
+  stat_compare_means(label.y = 101)+
+  stat_compare_means(aes(label=..p.adj..),
+  method = "wilcox.test", label = "p.signif", comparisons = comparisons)
+
+#Save violin plot
+#Save plot as svg
+ggsave(file="plot_name.svg", plot=plot, width = 10, height = 8)
