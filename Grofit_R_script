@@ -1,0 +1,74 @@
+library(ggpubr)
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+library(grofit)
+
+#Load Data Frame (one for growth data and one for times)
+df<-read.table("df.csv", header=FALSE, sep=",", dec=".")
+time<-read.table("time.csv", header=FALSE, sep=",", dec=".")
+
+#Run gcfit with the default conditions
+df_gcfit<-gcfit(time, df, control = grofit.control())
+
+#View Results and save using print
+print(summary(df_gcfit))
+df_gcfit_result<-print(summary(df_gcfit))
+
+#Write CSV of gcfit results
+write.csv(df_gcfit_result[["gcTable"]], "result.csv", row.names = FALSE)
+
+#Manually edit csv file in excel to contain only the subject name, lag phase, growth rate and maximum OD columns (save as CSV)
+#re-read in gcfit table for use in analysis
+sorted_df<-read.csv("sorted_gcfit_result.csv")
+
+#Change independent variable to a factor (it read in as a character)
+sorted_df$independant_variable<-as.factor(sorted_df$independant_variable)
+
+#Initial plot of the data with y as the dependent variable and x as the independent variable
+plot(sorted_$x~sorted_df$y)
+
+#ANOVA of data to have an initial look
+sorted_df_Aov<-aov(sorted_df$y~sorted_df$x)
+
+#Look for residuals ACROSS the data set using pearson correlation
+sr_sorted_df<-resid(sorted_df_Aov, type = "pearson")
+
+#Plot to look for normality in the data
+#Normality is if the data sits on or close to the line
+#If data is not normal, try transforming before continuing with non normal data comparisons/stats
+qqnorm(sr_sorted_df);qqline(sr_sorted_df)
+
+#Dunn test if data is not normal
+dt_sorted_df<-dunn.test(sorted_df$y, sorted_df$x, method="BH")
+dt_sorted_df
+
+#Comparison list
+comparisons<-list(c("comparison_1","comparison_2"), c("comparison_1","comparison_3"), c("comparison_2", "comparison_3"))
+
+#Box plot for growth phases (Growth rate used as an example)
+plot<-ggplot(sorted_df, aes(x=Strain, y=Lag_phase))+
+  labs(y="Growth Rate (h-1)")+theme_classic()+
+  geom_boxplot(position=position_dodge(1))+
+  stat_summary(fun = mean, geom="point", size=1, shape=16, color="red")+
+  stat_summary(fun.data = mean_sd, geom="errorbar", width=0.5)+
+  stat_compare_means(label.y =0.07)+
+  stat_compare_means(aes(label=..p.adj..), method = "wilcox.test", label = "p.signif", comparisons = comparisons)
+
+
+#Save image as file
+ggsave(file="growth_rate_plot.svg", plot=plot, width = 10, height = 8)
+
+#Find mean of box plot
+mean(sorted_df$y)
+
+#Merge multiple plots into one figure using ggarrange
+theme_set(theme_pubr())
+
+merged_plots<-ggarrange(plot_1, plot_2, plot_3,
+                               labels=c("A","B","C"),
+                               ncol=3, nrow=1)
+
+
+#Save merged plot
+ggsave(file="merged_plot.svg", plot=merged_plots, width = 10, height = 8)
