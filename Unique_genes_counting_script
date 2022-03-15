@@ -1,0 +1,54 @@
+This script is used to help with the filtering of unique lineage genes (outputted by scoary)
+
+Full bash script ran for this analysis:
+#!/bash/bin
+$1 sed "s/gnl|Prokka|//" file.txt > updated.txt
+$2 cut --complement -f3,4,5,6,7,8,9,10,11,12 updated.txt > cut.txt
+$3 awk -F'\t' '{sub(/\_.+$/,"",$2)}2' OFS='\t' cut.txt >file_tmp.txt && mv file_tmp.txt cut_final.txt
+$4 awk -F "\t" '{print >> (""$1".txt")}' ut_final.txt
+$5 ulimit -s 65536
+$6 parallel sort -k2 -u {} -o {.}_sorted.txt ::: B_multivorans*.txt
+$7 wc -l B_multivorans*_sorted.txt
+$8 wc -l B_multivorans*_sorted.txt > gene_count_result.csv
+$9 awk '{ for(i=1;i<=NF;i++){if(i==NF){printf("%s\n",$NF);}else {printf("%s\t",$i)}}}' gene_count_result.csv > gene_count_results_final.txt
+$10 rm -r gene_count_result.csv
+
+Additional manual steps:
+cat gene_count_result.txt | tr "\\t" "," > final.csv
+awk -F, '{sub(/_sorted.txt/,"",$2)}1' OFS=, final.csv > suffix_removed.csv 
+
+Explanation:
+#!/bash/bin
+#remove prefix from column two of tab delimited txt file using sed command and print to a new file name
+$1 sed "s/gnl|Prokka|//" file.txt > updated.txt
+#remove columns 3-12 (do not need these sections of BLAST output) and print to new file name
+$2 cut --complement -f3,4,5,6,7,8,9,10,11,12 updated.txt > cut.txt
+#Use awk command to remove _ and rest of unique suffix from column 2 ($2) of the tab delimited file.
+This assumes this is the first _ in the sequence so make sure to change the bacterial names/values is not.
+If there are file headings, then add NR>1 to beginning of command to ensure it skips this. This also uses a temporary file intermittently in the command before deleting it.
+$3 awk -F'\t' '{sub(/\_.+$/,"",$2)}1' OFS='\t' cut.txt >file_tmp.txt && mv file_tmp.txt cut_final.txt
+#Use awk to create (print) multiple files from master file (lineage2_cut_final.txt) based on column 1 ($1) of the tab delimited file 
+$4 awk -F "\t" '{print >> (""$1".txt")}' cut_final.txt
+Extra info: 
+•	-F’\t’ is a field separator with tab delimiter 
+•	>> appends to a file or creates files if it doesn’t exist
+•	print displays the contents of the file
+If there is a ”argument list is too long” error, change the maximum amount of space required for the argument. Example above is 65536 KB
+$5 ulimit -s 65536
+#Use parallel to filter (using sort) for unique (-u) values based on column 2 (-k2).
+This will be performed on all files that begin with B_multivorans and end in .txt and will be transformed into B_multivorans*_sorted.txt.
+$6 parallel sort -k2 -u {} -o {.}_sorted.txt ::: B_multivorans*.txt
+#Check the counts for all of the sorted B_multivorans files
+$7 wc -l B_multivorans*_sorted.txt
+#Print count results to CSV
+$8 wc -l B_multivorans*_sorted.txt > gene_count_result.csv
+#Convert CSV to tab delimited file
+$9 awk '{ for(i=1;i<=NF;i++){if(i==NF){printf("%s\n",$NF);}else {printf("%s\t",$i)}}}' gene_count_result.csv > gene_count_results_final.txt
+#Remove unwanted files
+$10 rm -r gene_count_result.csv B_multivorans*
+#Convert txt file into .csv file
+$11 cat L1_gene_count_results_final.txt | tr "\\t" "," > final.csv
+#Awk remove suffix from .csv file. OFS= means the output format is csv
+$12 awk -F, '{sub(/_sorted.txt/,"",$2)}1' OFS=, final.csv > suffix_removed.csv
+#Removes everything before and including _group in csv file column 2
+awk -F, '{sub(/.*_group/,"",$2)}1' OFS=, suffix_removed.csv > done.csv
