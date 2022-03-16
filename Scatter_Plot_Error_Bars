@@ -1,0 +1,29 @@
+library(ggplot2)
+
+#Load Data Frame as .csv file
+df<-read.csv("data.csv")
+
+#Aggregate data on column 4 of matrix (change this as necessary to the appropriate reading - I aggregate on the data point ie OD reading)
+#x is the group name and z is the time point in this case (ie day 1, 2, 3)
+df_aggregate<-aggregate(df[,4], list(df$x, df$z), mean)
+
+#calculate the standard deviation of the data frame (using the same column and variables as above)
+stdev_df<-aggregate(df[,4], list(df$x, df$z), sd)
+
+#Use cbind to attach the standard deviation (column 3) to the aggregated data frame
+new_df<-cbind(df_aggregate, stdev_df[,3])
+
+#Change column names as appropriate (using [1] to indicate you want to rename the first column only - change the number depending on the column to rename)
+colnames(new_df)[1]  <- "new_name"
+
+#Plot the data as a scatter plot with standard deviation error bars (omit the final line of code if you do not want the error bars)
+plot<-ggplot(new_df, aes(x=x, y=x, group=z, col=x))+
+  geom_line()+
+  geom_point(stat="identity")+
+  labs(x="x_title", y="y_title")+
+  theme_classic()+
+  xlim(0,5)+ylim(3.2,4.2)+
+  geom_errorbar(aes(ymin=x-stdev[,3], ymax=x+stvev[,3]), width=1)
+
+#Save image as file
+ggsave(file="plot.svg", plot=plot, width = 10, height = 8)
