@@ -1,4 +1,4 @@
 - 👋 Hi, I’m Kasia Parfitt
 - 👀 I’m interested in anything microbial
 - 🌱 Researcher
-- 📫 Reach me on parfittkm@cardiff.ac.uk
+- 📫 Reach me on kasia.parfitt@ndph.ox.ac.uk
