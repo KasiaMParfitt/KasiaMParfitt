@@ -1,0 +1,23 @@
+library(ggplot2)
+library(dplyr)
+
+#Load in data
+df<-read.csv(file.choose())
+
+#Aggregate data points by two columns (Strain and Isolate_Type)
+agg_data <- df %>%
+  group_by(Strain, Isolate_Type) %>% 
+  summarise_each(funs(mean))
+
+#Create simple scatter plot by isolate type with lines connecting paired groupings
+plot1<-ggplot(agg_data, aes(x = Isolate_Type, y = Normalised, color = Isolate_Type)) +
+  geom_point(size=1)+geom_line(aes(group=Paired), color="grey")
+
+#Customise scatter plot
+plot<-plot1+labs(y="Normalised Fluorescence (OD 450nm)", x="Isolate Type")+
+  theme_classic()+theme(legend.position = "none")+
+  scale_x_discrete(labels=c("I"="Infection Isolate", "N"="Nasal Isolate", "PC"="Population Control"))+
+  ylim(0,0.8)
+  
+#Save image as file
+ggsave(file="plot.svg", plot=plot, width = 10, height = 8)
