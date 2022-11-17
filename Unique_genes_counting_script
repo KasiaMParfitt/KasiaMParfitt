@@ -5,7 +5,7 @@ Full bash script ran for this analysis:
 $1 sed "s/gnl|Prokka|//" file.txt > updated.txt
 $2 cut --complement -f3,4,5,6,7,8,9,10,11,12 updated.txt > cut.txt
 $3 awk -F'\t' '{sub(/\_.+$/,"",$2)}2' OFS='\t' cut.txt >file_tmp.txt && mv file_tmp.txt cut_final.txt
-$4 awk -F "\t" '{print >> (""$1".txt")}' ut_final.txt
+$4 awk -F "\t" '{print >> (""$1".txt")}' cut_final.txt
 $5 ulimit -s 65536
 $6 parallel sort -k2 -u {} -o {.}_sorted.txt ::: B_multivorans*.txt
 $7 wc -l B_multivorans*_sorted.txt
