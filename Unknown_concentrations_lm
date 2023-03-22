@@ -33,4 +33,5 @@ intercept<-line$coefficients[1]
 slope<-line$coefficients[2]
 
 #List the unknown concentrations using y=mc^2 equations
-unknown_concs<-c(slope*unknowns[2]+intercept)
+unknown_concs<-round((unknowns[3]-intercept)/slope,1)
+
